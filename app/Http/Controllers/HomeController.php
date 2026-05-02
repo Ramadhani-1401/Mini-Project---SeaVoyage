@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Ship;
+
+class HomeController extends Controller
+{
+    public function index()
+    {
+        // Load featured ships from database (latest 6)
+        $featuredShips = Ship::latest()->take(6)->get();
+
+        // Disable carousel - always use gradient background hero
+        $slideshowImages = null;
+
+        return view('user.home', compact('featuredShips', 'slideshowImages'));
+    }
+
+    public function about()
+    {
+        // Build slideshow images from storage/app/public/ships (same source as home)
+        $slideshowImages = [];
+        try {
+            $files = Storage::disk('public')->files('ships');
+            if (!empty($files)) {
+                // take up to 5 images
+                $files = array_values($files);
+                $files = array_slice($files, 0, 5);
+                foreach ($files as $f) {
+                    $slideshowImages[] = asset('storage/' . $f);
+                }
+            }
+        } catch (\Exception $e) {
+            // ignore and leave slideshowImages empty
+        }
+
+        return view('user.about', compact('slideshowImages'));
+    }
+}
